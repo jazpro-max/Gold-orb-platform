@@ -10,7 +10,7 @@ app.use(express.static('public'));
 
 // Secure connection to your Supabase cloud database
 const pool = new Pool({
-    connectionString:postgresql://postgres.oaiibycvnckgzfmrazch:Jazug@2004Pro@aws-0-ca-central-1.pooler.supabase.com:6543/postgres ,
+    connectionString:"postgresql://postgres.oaiibycvnckgzfmrazch:Jazug@2004Pro@aws-0-ca-central-1.pooler.supabase.com:6543/postgres" ,
     ssl: { rejectUnauthorized: false }
 });
 
