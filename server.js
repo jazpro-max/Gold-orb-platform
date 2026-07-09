@@ -1,46 +1,52 @@
 const express = require('express');
 const path = require('path');
-const { Pool } = require('pg'); // PostgreSQL client pool
+const { Pool } = require('pg');
 const session = require('express-session');
 
 const app = express();
 
-// 1. Core Middlewares
+// Core Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Setup tracking sessions so the dashboard knows WHICH user is active
+// Session Configuration
 app.use(session({
     secret: 'gold-orb-secret-key-abcde',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // Session expires in 24 hours
+    cookie: { 
+        maxAge: 24 * 60 * 60 * 1000,
+        secure: false // Set to true if using production HTTPS, but false is safer for debugging free tiers
+    }
 }));
 
 // Serve static frontend assets cleanly out of your public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. Initialize PostgreSQL Connection Pool
-// Render automatically provides process.env.DATABASE_URL when you attach a PostgreSQL database
+// Initialize PostgreSQL Connection Pool
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Required for secure connections to Render Postgres
+        rejectUnauthorized: false // Bypasses Render SSL handshake restrictions safely
     }
 });
 
-// Create tables automatically if they don't exist
+// Test database connection and create tables using explicit schema strings
 const initializeDatabase = async () => {
     try {
+        const client = await pool.connect();
+        console.log("Successfully handshook with PostgreSQL instance.");
+        client.release(); // Return client back to the pool immediately
+
         // Setup User Management Table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
-                phone TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
+                phone VARCHAR(50) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
                 balance NUMERIC(15, 2) DEFAULT 0.00,
                 commission NUMERIC(15, 2) DEFAULT 0.00,
-                invitation_code TEXT
+                invitation_code VARCHAR(50)
             )
         `);
 
@@ -48,22 +54,22 @@ const initializeDatabase = async () => {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS orders (
                 id SERIAL PRIMARY KEY,
-                user_phone TEXT NOT NULL,
-                product_name TEXT NOT NULL,
+                user_phone VARCHAR(50) NOT NULL,
+                product_name VARCHAR(100) NOT NULL,
                 price NUMERIC(15, 2) NOT NULL,
                 daily_income NUMERIC(15, 2) NOT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log("PostgreSQL Database tables verified/created successfully.");
+        console.log("PostgreSQL structures checked and active.");
     } catch (err) {
-        console.error("Error creating database tables:", err.message);
+        console.error("CRITICAL DATABASE CONNECTION FAULT:", err.message);
     }
 };
 initializeDatabase();
 
 // ==========================================
-// 🔐 AUTHENTICATION ENDPOINTS (For login.html)
+// AUTHENTICATION ENDPOINTS
 // ==========================================
 
 // Register Account Pipeline
@@ -78,15 +84,16 @@ app.post('/api/auth/register', async (req, res) => {
     const query = `INSERT INTO users (phone, password, balance, commission, invitation_code) VALUES ($1, $2, 0, 0, $3)`;
     
     try {
-        await pool.query(query, [phone, password, assignedInviteCode]);
-        req.session.userPhone = phone; // Log them in automatically
+        // Explicitly stringify fields to prevent datatype mismatches
+        await pool.query(query, [String(phone), String(password), assignedInviteCode]);
+        req.session.userPhone = String(phone);
         return res.json({ success: true, message: "Account created successfully!" });
     } catch (err) {
-        if (err.code === '23505') { // PostgreSQL unique violation error code
+        console.error("Registration error details:", err.message);
+        if (err.code === '23505') { 
             return res.json({ success: false, message: "This phone number is already registered!" });
         }
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Internal server registry error." });
+        return res.status(500).json({ success: false, message: `Internal server registry error: ${err.message}` });
     }
 });
 
@@ -95,43 +102,34 @@ app.post('/api/auth/login', async (req, res) => {
     const { phone, password } = req.body;
 
     try {
-        const result = await pool.query(`SELECT * FROM users WHERE phone = $1 AND password = $2`, [phone, password]);
+        const result = await pool.query(`SELECT * FROM users WHERE phone = $1 AND password = $2`, [String(phone), String(password)]);
         
         if (result.rows.length === 0) {
             return res.json({ success: false, message: "Incorrect phone number or password." });
         }
 
-        // Save active identity reference inside session storage
         req.session.userPhone = result.rows[0].phone;
         return res.json({ success: true, message: "Login successful!" });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "System core connection drop." });
+        console.error("Login error details:", err.message);
+        return res.status(500).json({ success: false, message: `System core connection drop: ${err.message}` });
     }
 });
 
-
 // ==========================================
-// 📊 DASHBOARD & MACHINE STORAGE ENDPOINTS
+// DASHBOARD & HARDWARE ENGINE ENDPOINTS
 // ==========================================
 
-// Pull live profile telemetry for the logged-in user
 app.get('/api/user/profile', async (req, res) => {
     if (!req.session.userPhone) {
         return res.status(401).json({ success: false, message: "Session unauthorized. Re-login required." });
     }
-
     const phone = req.session.userPhone;
-
     try {
-        // Fetch user details
         const userResult = await pool.query(`SELECT phone, balance, commission, invitation_code FROM users WHERE phone = $1`, [phone]);
-        
         if (userResult.rows.length === 0) {
             return res.status(404).json({ success: false, message: "Profile matching error." });
         }
-
-        // Fetch their active investment orders
         const ordersResult = await pool.query(`SELECT product_name, price, daily_income FROM orders WHERE user_phone = $1`, [phone]);
 
         return res.json({
@@ -142,22 +140,18 @@ app.get('/api/user/profile', async (req, res) => {
             orders: ordersResult.rows || []
         });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Failed to map user portfolio state." });
+        return res.status(500).json({ success: false, message: "Failed to map user profile portfolio status." });
     }
 });
 
-// Process a Lease Investment Machine Purchase
 app.post('/api/user/buy-product', async (req, res) => {
     if (!req.session.userPhone) {
         return res.status(401).json({ success: false, message: "Unauthenticated action attempt." });
     }
-
     const phone = req.session.userPhone;
     const { productName, price, dailyIncome } = req.body;
 
     try {
-        // Look up wallet to verify if they have enough money
         const userResult = await pool.query(`SELECT balance FROM users WHERE phone = $1`, [phone]);
         if (userResult.rows.length === 0) return res.status(500).json({ success: false, message: "Verification processing failed." });
 
@@ -166,50 +160,37 @@ app.post('/api/user/buy-product', async (req, res) => {
             return res.json({ success: false, message: "Insufficient balance to lease this machine!" });
         }
 
-        // Use standard atomic transactional queries to protect system state matches
         await pool.query('BEGIN');
-        
-        // Deduct balance funds out of wallet data sheet
         await pool.query(`UPDATE users SET balance = balance - $1 WHERE phone = $2`, [price, phone]);
-        
-        // Provision investment hardware record mapping
         await pool.query(`INSERT INTO orders (user_phone, product_name, price, daily_income) VALUES ($1, $2, $3, $4)`, 
             [phone, productName, price, dailyIncome]);
-        
         await pool.query('COMMIT');
-        return res.json({ success: true, message: "Machine leased and processing successfully!" });
+        return res.json({ success: true, message: "Machine leased successfully!" });
     } catch (err) {
         await pool.query('ROLLBACK');
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Hardware binding failure." });
+        return res.status(500).json({ success: false, message: "Hardware binding failure transaction." });
     }
 });
 
-// Administrative Adjustments (Recharge / Manual subtracts)
 app.post('/api/admin/update-balance', async (req, res) => {
     const { phone, newBalance, type } = req.body;
     const amount = parseFloat(newBalance);
-
     let query = `UPDATE users SET balance = balance + $1 WHERE phone = $2`;
     if (type === 'balance_subtract') {
         query = `UPDATE users SET balance = balance - $1 WHERE phone = $2`;
     }
-
     try {
         await pool.query(query, [amount, phone]);
         return res.json({ success: true, message: "Ledger status balanced successfully!" });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Admin system balance sync failed." });
+        return res.status(500).json({ success: false, message: "Admin update execution error." });
     }
 });
 
-// Global Router Catch-all (Redirect default requests gracefully to login)
 app.get('/', (req, res) => {
     res.redirect('/login.html');
 });
 
-// Boot up Listener 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Gold Orb PostgreSQL Node server running flawlessly on port ${PORT}`));
-    
+app.listen(PORT, () => console.log(`Server execution processing safely on port ${PORT}`));
+            
