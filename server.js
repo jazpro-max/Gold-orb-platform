@@ -16,29 +16,35 @@ app.use(session({
     saveUninitialized: false,
     cookie: { 
         maxAge: 24 * 60 * 60 * 1000,
-        secure: false // Set to true if using production HTTPS, but false is safer for debugging free tiers
+        secure: false // Keep false unless running fully on forced HTTPS
     }
 }));
 
 // Serve static frontend assets cleanly out of your public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize PostgreSQL Connection Pool
+// Securely check if DATABASE_URL is provided before creating connection pool
+if (!process.env.DATABASE_URL) {
+    console.error("FATAL ERROR: DATABASE_URL environment variable is missing!");
+}
+
+// Initialize PostgreSQL Connection Pool with SSL config for Render
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Bypasses Render SSL handshake restrictions safely
-    }
+        rejectUnauthorized: false // Required for safe connection to Render Postgres
+    },
+    connectionTimeoutMillis: 10000 // 10 second timeout allowance
 });
 
-// Test database connection and create tables using explicit schema strings
+// Setup Database & Tables
 const initializeDatabase = async () => {
     try {
         const client = await pool.connect();
         console.log("Successfully handshook with PostgreSQL instance.");
-        client.release(); // Return client back to the pool immediately
+        client.release(); // Immediately release client back to pool
 
-        // Setup User Management Table
+        // Create Users Table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -50,7 +56,7 @@ const initializeDatabase = async () => {
             )
         `);
 
-        // Setup Active Investment Leases Tracking Table
+        // Create Orders Table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS orders (
                 id SERIAL PRIMARY KEY,
@@ -61,48 +67,59 @@ const initializeDatabase = async () => {
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log("PostgreSQL structures checked and active.");
+        console.log("Database tables verified and ready.");
     } catch (err) {
         console.error("CRITICAL DATABASE CONNECTION FAULT:", err.message);
     }
 };
+
 initializeDatabase();
 
 // ==========================================
-// AUTHENTICATION ENDPOINTS
+// AUTHENTICATION ENDPOINTS (With Safe Connection Checks)
 // ==========================================
 
 // Register Account Pipeline
 app.post('/api/auth/register', async (req, res) => {
-    const { phone, password } = req.body;
+    let { phone, password } = req.body;
 
     if (!phone || !password) {
         return res.status(400).json({ success: false, message: "Phone and password values required." });
     }
 
+    // Sanitize values to plain strings and trim whitespace
+    phone = String(phone).trim();
+    password = String(password).trim();
+
     const assignedInviteCode = Math.floor(1000000 + Math.random() * 9000000).toString();
     const query = `INSERT INTO users (phone, password, balance, commission, invitation_code) VALUES ($1, $2, 0, 0, $3)`;
     
     try {
-        // Explicitly stringify fields to prevent datatype mismatches
-        await pool.query(query, [String(phone), String(password), assignedInviteCode]);
-        req.session.userPhone = String(phone);
+        await pool.query(query, [phone, password, assignedInviteCode]);
+        req.session.userPhone = phone;
         return res.json({ success: true, message: "Account created successfully!" });
     } catch (err) {
         console.error("Registration error details:", err.message);
         if (err.code === '23505') { 
             return res.json({ success: false, message: "This phone number is already registered!" });
         }
-        return res.status(500).json({ success: false, message: `Internal server registry error: ${err.message}` });
+        return res.status(500).json({ success: false, message: "Server connection failed. Try again in 10 seconds." });
     }
 });
 
 // Authenticate Session Access Login
 app.post('/api/auth/login', async (req, res) => {
-    const { phone, password } = req.body;
+    let { phone, password } = req.body;
+
+    if (!phone || !password) {
+        return res.status(400).json({ success: false, message: "Phone and password required." });
+    }
+
+    phone = String(phone).trim();
+    password = String(password).trim();
 
     try {
-        const result = await pool.query(`SELECT * FROM users WHERE phone = $1 AND password = $2`, [String(phone), String(password)]);
+        const result = await pool.query(`SELECT * FROM users WHERE phone = $1 AND password = $2`, [phone, password]);
         
         if (result.rows.length === 0) {
             return res.json({ success: false, message: "Incorrect phone number or password." });
@@ -111,13 +128,13 @@ app.post('/api/auth/login', async (req, res) => {
         req.session.userPhone = result.rows[0].phone;
         return res.json({ success: true, message: "Login successful!" });
     } catch (err) {
-        console.error("Login error details:", err.message);
-        return res.status(500).json({ success: false, message: `System core connection drop: ${err.message}` });
+        console.error("Login database query failure:", err.message);
+        return res.status(500).json({ success: false, message: "Database handshake delayed. Please try again." });
     }
 });
 
 // ==========================================
-// DASHBOARD & HARDWARE ENGINE ENDPOINTS
+// OTHER PORTFOLIO ENDPOINTS
 // ==========================================
 
 app.get('/api/user/profile', async (req, res) => {
@@ -193,4 +210,3 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server execution processing safely on port ${PORT}`));
-            
