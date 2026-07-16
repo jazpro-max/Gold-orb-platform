@@ -9,21 +9,21 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session Configuration
+// Session Configuration (Configured with safe flags to prevent warning)
 app.use(session({
     secret: 'gold-orb-secret-key-abcde',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: { 
         maxAge: 24 * 60 * 60 * 1000,
         secure: false 
     }
 }));
 
-// Serve static frontend assets cleanly out of your public directory
+// Serve static frontend assets out of your public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize PostgreSQL Connection Pool
+// Initialize PostgreSQL Connection Pool with secure Render SSL
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -32,11 +32,11 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000 
 });
 
-// Setup Database & Tables
+// Setup Database Tables
 const initializeDatabase = async () => {
     try {
         const client = await pool.connect();
-        console.log("Successfully handshook with PostgreSQL instance.");
+        console.log("Successfully connected to PostgreSQL Database!");
         client.release(); 
 
         // Create Users Table
@@ -67,82 +67,72 @@ const initializeDatabase = async () => {
         console.error("CRITICAL DATABASE CONNECTION FAULT:", err.message);
     }
 };
-
 initializeDatabase();
 
 // ==========================================
 // AUTHENTICATION ENDPOINTS
 // ==========================================
 
-// Register Account Pipeline
+// Register Account
 app.post('/api/auth/register', async (req, res) => {
     let { phone, password } = req.body;
-
-    if (!phone || !password) {
-        return res.status(400).json({ success: false, message: "Phone and password values required." });
-    }
-
-    phone = String(phone).trim();
-    password = String(password).trim();
-
-    const assignedInviteCode = Math.floor(1000000 + Math.random() * 9000000).toString();
-    const query = `INSERT INTO users (phone, password, balance, commission, invitation_code) VALUES ($1, $2, 0, 0, $3)`;
-    
-    try {
-        await pool.query(query, [phone, password, assignedInviteCode]);
-        req.session.userPhone = phone;
-        return res.json({ success: true, message: "Account created successfully!" });
-    } catch (err) {
-        console.error("Registration error:", err.message);
-        if (err.code === '23505') { 
-            return res.json({ success: false, message: "This phone number is already registered!" });
-        }
-        return res.status(500).json({ success: false, message: "Server connection failed." });
-    }
-});
-
-// Authenticate Session Access Login
-app.post('/api/auth/login', async (req, res) => {
-    let { phone, password } = req.body;
-
     if (!phone || !password) {
         return res.status(400).json({ success: false, message: "Phone and password required." });
     }
+    phone = String(phone).trim();
+    password = String(password).trim();
+    const assignedInviteCode = Math.floor(1000000 + Math.random() * 9000000).toString();
+    
+    try {
+        await pool.query(
+            `INSERT INTO users (phone, password, balance, commission, invitation_code) VALUES ($1, $2, 0, 0, $3)`,
+            [phone, password, assignedInviteCode]
+        );
+        req.session.userPhone = phone;
+        return res.json({ success: true, message: "Account created successfully!" });
+    } catch (err) {
+        if (err.code === '23505') { 
+            return res.json({ success: false, message: "This phone number is already registered!" });
+        }
+        return res.status(500).json({ success: false, message: "Database connection lost." });
+    }
+});
 
+// Login Account
+app.post('/api/auth/login', async (req, res) => {
+    let { phone, password } = req.body;
+    if (!phone || !password) {
+        return res.status(400).json({ success: false, message: "Phone and password required." });
+    }
     phone = String(phone).trim();
     password = String(password).trim();
 
     try {
         const result = await pool.query(`SELECT * FROM users WHERE phone = $1 AND password = $2`, [phone, password]);
-        
         if (result.rows.length === 0) {
             return res.json({ success: false, message: "Incorrect phone number or password." });
         }
-
         req.session.userPhone = result.rows[0].phone;
         return res.json({ success: true, message: "Login successful!" });
     } catch (err) {
-        console.error("Login query failure:", err.message);
         return res.status(500).json({ success: false, message: "Database handshake delayed." });
     }
 });
 
 // ==========================================
-// USER PORTFOLIO ENDPOINTS
+// USER ENDPOINTS
 // ==========================================
 
 app.get('/api/user/profile', async (req, res) => {
     if (!req.session.userPhone) {
-        return res.status(401).json({ success: false, message: "Session unauthorized." });
+        return res.status(401).json({ success: false, message: "Unauthorized." });
     }
-    const phone = req.session.userPhone;
     try {
-        const userResult = await pool.query(`SELECT phone, balance, commission, invitation_code FROM users WHERE phone = $1`, [phone]);
+        const userResult = await pool.query(`SELECT phone, balance, commission, invitation_code FROM users WHERE phone = $1`, [req.session.userPhone]);
         if (userResult.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Profile matching error." });
+            return res.status(404).json({ success: false, message: "User not found." });
         }
-        const ordersResult = await pool.query(`SELECT product_name, price, daily_income FROM orders WHERE user_phone = $1`, [phone]);
-
+        const ordersResult = await pool.query(`SELECT product_name, price, daily_income FROM orders WHERE user_phone = $1`, [req.session.userPhone]);
         return res.json({
             phone: userResult.rows[0].phone,
             balance: parseFloat(userResult.rows[0].balance),
@@ -151,20 +141,20 @@ app.get('/api/user/profile', async (req, res) => {
             orders: ordersResult.rows || []
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: "Failed to map user profile." });
+        return res.status(500).json({ success: false, message: "Server error." });
     }
 });
 
 app.post('/api/user/buy-product', async (req, res) => {
     if (!req.session.userPhone) {
-        return res.status(401).json({ success: false, message: "Unauthenticated action attempt." });
+        return res.status(401).json({ success: false, message: "Unauthorized." });
     }
     const phone = req.session.userPhone;
     const { productName, price, dailyIncome } = req.body;
 
     try {
         const userResult = await pool.query(`SELECT balance FROM users WHERE phone = $1`, [phone]);
-        if (userResult.rows.length === 0) return res.status(500).json({ success: false, message: "Verification processing failed." });
+        if (userResult.rows.length === 0) return res.status(500).json({ success: false, message: "User check failed." });
 
         const currentBalance = parseFloat(userResult.rows[0].balance);
         if (currentBalance < price) {
@@ -179,26 +169,23 @@ app.post('/api/user/buy-product', async (req, res) => {
         return res.json({ success: true, message: "Machine leased successfully!" });
     } catch (err) {
         await pool.query('ROLLBACK');
-        return res.status(500).json({ success: false, message: "Hardware binding failure." });
+        return res.status(500).json({ success: false, message: "Transaction failed." });
     }
 });
 
-
 // ==========================================
-// 🛠️ ADMIN PANEL ENDPOINTS (FULLY RECTIFIED)
+// 🛠️ ADMIN PANEL ENDPOINTS
 // ==========================================
 
-// Endpoint 1: Fetch ALL users, passwords, and calculate total statistics
+// 1. Get Users with IDs, passwords, and correct totals calculations
 app.get('/api/admin/users', async (req, res) => {
     try {
-        // 1. Fetch all users from the database with IDs and passwords
         const usersResult = await pool.query(`
             SELECT id, phone, password, balance, commission, invitation_code 
             FROM users 
             ORDER BY id DESC
         `);
 
-        // 2. Fetch all active orders to count them
         const ordersCountResult = await pool.query(`SELECT COUNT(*) FROM orders`);
         const totalActiveOrders = parseInt(ordersCountResult.rows[0].count || 0);
 
@@ -208,21 +195,19 @@ app.get('/api/admin/users', async (req, res) => {
         const formattedUsers = usersResult.rows.map(user => {
             const userBal = parseFloat(user.balance || 0);
             const userComm = parseFloat(user.commission || 0);
-            
             totalBalances += userBal;
             totalCommissions += userComm;
 
             return {
                 id: user.id,
                 phone: user.phone,
-                password: user.password, // Provided so it doesn't show "undefined"
+                password: user.password, 
                 balance: userBal,
                 commission: userComm,
                 invitation_code: user.invitation_code || ''
             };
         });
 
-        // 3. Return everything structured for your frontend cards and table
         return res.json({ 
             success: true, 
             users: formattedUsers,
@@ -234,11 +219,12 @@ app.get('/api/admin/users', async (req, res) => {
             }
         });
     } catch (err) {
-        console.error("Admin fetch users error:", err.message);
-        return res.status(500).json({ success: false, message: "Failed to fetch user directory." });
+        console.error("Admin fetch error:", err.message);
+        return res.status(500).json({ success: false, message: "Database query failed." });
     }
 });
-// Endpoint 2: Handle modifications for balances and commissions
+
+// 2. Update Balance, Commissions, Add, and Subtract Actions
 app.post('/api/admin/update-balance', async (req, res) => {
     const { phone, newBalance, type } = req.body;
     const amount = parseFloat(newBalance);
@@ -263,16 +249,15 @@ app.post('/api/admin/update-balance', async (req, res) => {
     try {
         const result = await pool.query(query, [amount, String(phone)]);
         if (result.rowCount === 0) {
-            return res.json({ success: false, message: "Target user phone number not found." });
+            return res.json({ success: false, message: "User phone number not found." });
         }
         return res.json({ success: true, message: "Ledger details adjusted successfully!" });
     } catch (err) {
-        console.error("Admin balance modification failure:", err.message);
-        return res.status(500).json({ success: false, message: "Admin update execution error." });
+        return res.status(500).json({ success: false, message: "Admin update failed." });
     }
 });
 
-// Catch-all
+// Redirect default requests
 app.get('/', (req, res) => {
     if (req.session.userPhone) {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -282,4 +267,4 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server execution processing safely on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running safely on port ${PORT}`));
