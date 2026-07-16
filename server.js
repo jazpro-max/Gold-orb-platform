@@ -185,33 +185,59 @@ app.post('/api/user/buy-product', async (req, res) => {
 
 
 // ==========================================
-// 🛠️ ADMIN PANEL ENDPOINTS (CRITICAL FIXED)
+// 🛠️ ADMIN PANEL ENDPOINTS (FULLY RECTIFIED)
 // ==========================================
 
-// Endpoint 1: Fetch ALL registered users so they display in your admin panel table
+// Endpoint 1: Fetch ALL users, passwords, and calculate total statistics
 app.get('/api/admin/users', async (req, res) => {
     try {
-        const result = await pool.query(`
-            SELECT phone, balance, commission, invitation_code 
+        // 1. Fetch all users from the database with IDs and passwords
+        const usersResult = await pool.query(`
+            SELECT id, phone, password, balance, commission, invitation_code 
             FROM users 
             ORDER BY id DESC
         `);
-        
-        // Return values clean of postgres types
-        const formattedUsers = result.rows.map(user => ({
-            phone: user.phone,
-            balance: parseFloat(user.balance || 0),
-            commission: parseFloat(user.commission || 0),
-            invitation_code: user.invitation_code || ''
-        }));
 
-        return res.json({ success: true, users: formattedUsers });
+        // 2. Fetch all active orders to count them
+        const ordersCountResult = await pool.query(`SELECT COUNT(*) FROM orders`);
+        const totalActiveOrders = parseInt(ordersCountResult.rows[0].count || 0);
+
+        let totalBalances = 0;
+        let totalCommissions = 0;
+
+        const formattedUsers = usersResult.rows.map(user => {
+            const userBal = parseFloat(user.balance || 0);
+            const userComm = parseFloat(user.commission || 0);
+            
+            totalBalances += userBal;
+            totalCommissions += userComm;
+
+            return {
+                id: user.id,
+                phone: user.phone,
+                password: user.password, // Provided so it doesn't show "undefined"
+                balance: userBal,
+                commission: userComm,
+                invitation_code: user.invitation_code || ''
+            };
+        });
+
+        // 3. Return everything structured for your frontend cards and table
+        return res.json({ 
+            success: true, 
+            users: formattedUsers,
+            stats: {
+                totalClients: formattedUsers.length,
+                totalVaultBalances: totalBalances,
+                totalCommissionsPaid: totalCommissions,
+                activeInvestmentOrders: totalActiveOrders
+            }
+        });
     } catch (err) {
         console.error("Admin fetch users error:", err.message);
         return res.status(500).json({ success: false, message: "Failed to fetch user directory." });
     }
 });
-
 // Endpoint 2: Handle modifications for balances and commissions
 app.post('/api/admin/update-balance', async (req, res) => {
     const { phone, newBalance, type } = req.body;
