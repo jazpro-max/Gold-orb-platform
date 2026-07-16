@@ -16,25 +16,20 @@ app.use(session({
     saveUninitialized: false,
     cookie: { 
         maxAge: 24 * 60 * 60 * 1000,
-        secure: false // Keep false unless running fully on forced HTTPS
+        secure: false 
     }
 }));
 
 // Serve static frontend assets cleanly out of your public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Securely check if DATABASE_URL is provided before creating connection pool
-if (!process.env.DATABASE_URL) {
-    console.error("FATAL ERROR: DATABASE_URL environment variable is missing!");
-}
-
-// Initialize PostgreSQL Connection Pool with SSL config for Render
+// Initialize PostgreSQL Connection Pool
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Required for safe connection to Render Postgres
+        rejectUnauthorized: false 
     },
-    connectionTimeoutMillis: 10000 // 10 second timeout allowance
+    connectionTimeoutMillis: 10000 
 });
 
 // Setup Database & Tables
@@ -42,7 +37,7 @@ const initializeDatabase = async () => {
     try {
         const client = await pool.connect();
         console.log("Successfully handshook with PostgreSQL instance.");
-        client.release(); // Immediately release client back to pool
+        client.release(); 
 
         // Create Users Table
         await pool.query(`
@@ -76,7 +71,7 @@ const initializeDatabase = async () => {
 initializeDatabase();
 
 // ==========================================
-// AUTHENTICATION ENDPOINTS (With Safe Connection Checks)
+// AUTHENTICATION ENDPOINTS
 // ==========================================
 
 // Register Account Pipeline
@@ -87,7 +82,6 @@ app.post('/api/auth/register', async (req, res) => {
         return res.status(400).json({ success: false, message: "Phone and password values required." });
     }
 
-    // Sanitize values to plain strings and trim whitespace
     phone = String(phone).trim();
     password = String(password).trim();
 
@@ -99,11 +93,11 @@ app.post('/api/auth/register', async (req, res) => {
         req.session.userPhone = phone;
         return res.json({ success: true, message: "Account created successfully!" });
     } catch (err) {
-        console.error("Registration error details:", err.message);
+        console.error("Registration error:", err.message);
         if (err.code === '23505') { 
             return res.json({ success: false, message: "This phone number is already registered!" });
         }
-        return res.status(500).json({ success: false, message: "Server connection failed. Try again in 10 seconds." });
+        return res.status(500).json({ success: false, message: "Server connection failed." });
     }
 });
 
@@ -128,18 +122,18 @@ app.post('/api/auth/login', async (req, res) => {
         req.session.userPhone = result.rows[0].phone;
         return res.json({ success: true, message: "Login successful!" });
     } catch (err) {
-        console.error("Login database query failure:", err.message);
-        return res.status(500).json({ success: false, message: "Database handshake delayed. Please try again." });
+        console.error("Login query failure:", err.message);
+        return res.status(500).json({ success: false, message: "Database handshake delayed." });
     }
 });
 
 // ==========================================
-// OTHER PORTFOLIO ENDPOINTS
+// USER PORTFOLIO ENDPOINTS
 // ==========================================
 
 app.get('/api/user/profile', async (req, res) => {
     if (!req.session.userPhone) {
-        return res.status(401).json({ success: false, message: "Session unauthorized. Re-login required." });
+        return res.status(401).json({ success: false, message: "Session unauthorized." });
     }
     const phone = req.session.userPhone;
     try {
@@ -157,7 +151,7 @@ app.get('/api/user/profile', async (req, res) => {
             orders: ordersResult.rows || []
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: "Failed to map user profile portfolio status." });
+        return res.status(500).json({ success: false, message: "Failed to map user profile." });
     }
 });
 
@@ -185,28 +179,81 @@ app.post('/api/user/buy-product', async (req, res) => {
         return res.json({ success: true, message: "Machine leased successfully!" });
     } catch (err) {
         await pool.query('ROLLBACK');
-        return res.status(500).json({ success: false, message: "Hardware binding failure transaction." });
+        return res.status(500).json({ success: false, message: "Hardware binding failure." });
     }
 });
 
+
+// ==========================================
+// 🛠️ ADMIN PANEL ENDPOINTS (CRITICAL FIXED)
+// ==========================================
+
+// Endpoint 1: Fetch ALL registered users so they display in your admin panel table
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT phone, balance, commission, invitation_code 
+            FROM users 
+            ORDER BY id DESC
+        `);
+        
+        // Return values clean of postgres types
+        const formattedUsers = result.rows.map(user => ({
+            phone: user.phone,
+            balance: parseFloat(user.balance || 0),
+            commission: parseFloat(user.commission || 0),
+            invitation_code: user.invitation_code || ''
+        }));
+
+        return res.json({ success: true, users: formattedUsers });
+    } catch (err) {
+        console.error("Admin fetch users error:", err.message);
+        return res.status(500).json({ success: false, message: "Failed to fetch user directory." });
+    }
+});
+
+// Endpoint 2: Handle modifications for balances and commissions
 app.post('/api/admin/update-balance', async (req, res) => {
     const { phone, newBalance, type } = req.body;
     const amount = parseFloat(newBalance);
-    let query = `UPDATE users SET balance = balance + $1 WHERE phone = $2`;
-    if (type === 'balance_subtract') {
-        query = `UPDATE users SET balance = balance - $1 WHERE phone = $2`;
+
+    if (isNaN(amount)) {
+        return res.status(400).json({ success: false, message: "Invalid amount value." });
     }
+
+    let query = ``;
+    if (type === 'balance_add') {
+        query = `UPDATE users SET balance = balance + $1 WHERE phone = $2`;
+    } else if (type === 'balance_subtract') {
+        query = `UPDATE users SET balance = balance - $1 WHERE phone = $2`;
+    } else if (type === 'commission_add') {
+        query = `UPDATE users SET commission = commission + $1 WHERE phone = $2`;
+    } else if (type === 'commission_subtract') {
+        query = `UPDATE users SET commission = commission - $1 WHERE phone = $2`;
+    } else {
+        return res.status(400).json({ success: false, message: "Invalid modification type." });
+    }
+
     try {
-        await pool.query(query, [amount, phone]);
-        return res.json({ success: true, message: "Ledger status balanced successfully!" });
+        const result = await pool.query(query, [amount, String(phone)]);
+        if (result.rowCount === 0) {
+            return res.json({ success: false, message: "Target user phone number not found." });
+        }
+        return res.json({ success: true, message: "Ledger details adjusted successfully!" });
     } catch (err) {
+        console.error("Admin balance modification failure:", err.message);
         return res.status(500).json({ success: false, message: "Admin update execution error." });
     }
 });
 
+// Catch-all
 app.get('/', (req, res) => {
-    res.redirect('/login.html');
+    if (req.session.userPhone) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } else {
+        res.redirect('/login.html');
+    }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server execution processing safely on port ${PORT}`));
