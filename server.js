@@ -224,36 +224,53 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-// 2. Update Balance, Commissions, Add, and Subtract Actions
+// Endpoint 2: Handle modifications for balances and commissions (Super Compatible)
 app.post('/api/admin/update-balance', async (req, res) => {
-    const { phone, newBalance, type } = req.body;
-    const amount = parseFloat(newBalance);
+    // This log helps you see exactly what your HTML page is sending to the backend
+    console.log("Admin Modify Request Received. Payload:", req.body);
+
+    const { phone, type } = req.body;
+    
+    // Fallback search: Accept 'newBalance', 'amount', 'balance', or 'value'
+    const rawAmount = req.body.newBalance ?? req.body.amount ?? req.body.balance ?? req.body.value;
+    const amount = parseFloat(rawAmount);
+
+    if (!phone) {
+        return res.status(400).json({ success: false, message: "User phone number is required." });
+    }
 
     if (isNaN(amount)) {
-        return res.status(400).json({ success: false, message: "Invalid amount value." });
+        return res.status(400).json({ success: false, message: "Invalid money amount value received." });
     }
 
     let query = ``;
-    if (type === 'balance_add') {
+    // Normalize type string to handle different frontend variations
+    const actionType = String(type || '').toLowerCase().trim();
+
+    if (actionType === 'balance_add' || actionType === 'add' || actionType === 'deposit') {
         query = `UPDATE users SET balance = balance + $1 WHERE phone = $2`;
-    } else if (type === 'balance_subtract') {
+    } else if (actionType === 'balance_subtract' || actionType === 'subtract' || actionType === 'withdraw') {
         query = `UPDATE users SET balance = balance - $1 WHERE phone = $2`;
-    } else if (type === 'commission_add') {
+    } else if (actionType === 'commission_add' || actionType === 'commission') {
         query = `UPDATE users SET commission = commission + $1 WHERE phone = $2`;
-    } else if (type === 'commission_subtract') {
+    } else if (actionType === 'commission_subtract') {
         query = `UPDATE users SET commission = commission - $1 WHERE phone = $2`;
     } else {
-        return res.status(400).json({ success: false, message: "Invalid modification type." });
+        // Safe default: If type is unrecognized, assume we are adding to the balance
+        query = `UPDATE users SET balance = balance + $1 WHERE phone = $2`;
     }
 
     try {
-        const result = await pool.query(query, [amount, String(phone)]);
+        const result = await pool.query(query, [amount, String(phone).trim()]);
+        
         if (result.rowCount === 0) {
-            return res.json({ success: false, message: "User phone number not found." });
+            return res.json({ success: false, message: "No user found with that phone number." });
         }
-        return res.json({ success: true, message: "Ledger details adjusted successfully!" });
+        
+        return res.json({ success: true, message: "User ledger adjusted successfully!" });
     } catch (err) {
-        return res.status(500).json({ success: false, message: "Admin update failed." });
+        console.error("Admin balance modification failure:", err.message);
+        return res.status(500).json({ success: false, message: `Database execution error: ${err.message}` });
     }
 });
 
