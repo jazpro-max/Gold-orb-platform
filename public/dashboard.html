@@ -3,508 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaztech Shopping - Electronics Crowdfund & Leases</title>
+    <title>Akuo Clone</title>
+    <!-- Google Fonts & Tailwind CSS for modern layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background-color: #0b0f19;
-            color: #ffffff;
-            padding-bottom: 80px;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
         }
-
-        /* Header Style */
-        header {
-            background-color: #111827;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #1f2937;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #f59e0b;
-            letter-spacing: 1px;
-            text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
-        }
-
-        .user-phone {
-            font-size: 0.9rem;
-            color: #9ca3af;
-        }
-
-        /* Hero / Overview Section */
-        .dashboard-overview {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .card {
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
-            pointer-events: none;
-        }
-
-        .balance-card {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: #000;
-        }
-
-        .balance-card .card-title {
-            color: #3f2305;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .balance-card .card-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin: 10px 0;
-        }
-
-        .commission-card {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-            color: #fff;
-        }
-
-        .commission-card .card-title {
-            color: #fee2e2;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .commission-card .card-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin: 10px 0;
-        }
-
-        .action-btn {
-            background-color: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: inherit;
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
-            text-align: center;
-            transition: all 0.2s ease;
-            width: fit-content;
-        }
-
-        .action-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Section Title */
-        .section-title {
-            padding: 20px 20px 10px;
-            font-size: 1.15rem;
-            color: #f3f4f6;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* Product Grid Section */
-        .product-section {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .product-card {
-            background-color: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 20px;
-            overflow: hidden;
-            display: flex;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .product-card:hover {
-            transform: translateY(-2px);
-            border-color: #374151;
-        }
-
-        .product-image {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-right: 1px solid #1f2937;
-        }
-
-        .product-details {
-            flex: 1;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .product-name {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 5px;
-        }
-
-        .product-pricing {
-            font-size: 0.85rem;
-            color: #9ca3af;
-            line-height: 1.5;
-        }
-
-        .product-pricing span {
-            color: #f59e0b;
-            font-weight: 600;
-        }
-
-        .rent-btn {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border: none;
-            color: #000;
-            padding: 8px 18px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            align-self: flex-end;
-            transition: transform 0.1s;
-        }
-
-        .rent-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Bottom Nav Menu */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #111827;
-            border-top: 1px solid #1f2937;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            z-index: 100;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #9ca3af;
-            font-size: 0.75rem;
-            font-weight: 500;
-            gap: 4px;
-        }
-
-        .nav-item.active {
-            color: #f59e0b;
-        }
-
-        .nav-icon {
-            font-size: 1.25rem;
-        }
-
-        /* Modal Overlay */
-        .modal {
+        /* Custom scrollbar hiding for app-like feeling */
+        ::-webkit-scrollbar {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
-
-        .modal-content {
-            background-color: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 20px;
-            padding: 24px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            position: relative;
+        .page {
+            display: none;
         }
-
-        .modal-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: #ffffff;
-        }
-
-        .modal-text {
-            color: #9ca3af;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 30px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .modal-btn.confirm {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: #000;
-        }
-
-        .modal-btn.cancel {
-            background-color: #374151;
-            color: #fff;
+        .page.active {
+            display: block;
         }
     </style>
 </head>
-<body>
+<body class="flex justify-center items-center min-h-screen bg-gray-100">
 
-    <!-- Top Header Bar -->
-    <header>
-        <div class="logo">JAZTECH SHOPPING</div>
-        <div class="user-phone" id="display-phone">Loading...</div>
-    </header>
-
-    <!-- Balance Dashboard Metrics -->
-    <section class="dashboard-overview">
-        <div class="card balance-card">
-            <div>
-                <div class="card-title">Available Balance</div>
-                <div class="card-value" id="user-balance">UGX 0</div>
-            </div>
-            <button class="action-btn" onclick="triggerWithdraw()">Withdraw</button>
+    <!-- Mobile Device Container -->
+    <div class="w-full max-w-md bg-white min-h-screen shadow-2xl flex flex-col relative pb-20 overflow-x-hidden">
+        
+        <!-- ================= MARQUEE (WITHDRAW PROOFS) ================= -->
+        <div class="bg-yellow-100 text-yellow-800 text-xs py-2 px-3 border-b border-yellow-200 flex items-center overflow-hidden whitespace-nowrap">
+            <span class="font-bold mr-2 flex items-center"><i class="fa-solid fa-bullhorn mr-1 text-yellow-600 animate-bounce"></i> Notice:</span>
+            <marquee behavior="scroll" direction="left" class="w-full" scrollamount="4">
+                🎉 User 25670***818 successfully withdrew 150,000 UGX! | 🎉 User 25675***402 successfully withdrew 50,000 UGX! | 🎉 User 25678***119 successfully withdrew 900,000 UGX! | 🎉 User 25677***330 successfully withdrew 30,000 UGX!
+            </marquee>
         </div>
-        <div class="card commission-card">
-            <div>
-                <div class="card-title">Team Commissions</div>
-                <div class="card-value" id="user-commission">UGX 0</div>
-            </div>
-            <button class="action-btn" onclick="triggerClaim()">Claim</button>
-        </div>
-    </section>
 
-    <!-- Product Sub-Title Section -->
-    <div class="section-title">
-        <span>⚡</span> Available Electronic Hardware Portfolios
-    </div>
-
-    <!-- Crowdfund Catalog List -->
-    <section class="product-section">
-
-        <!-- Product 1: Smart LED Solar Bulb -->
-        <div class="product-card">
-            <img class="product-image" src="https://images.unsplash.com/photo-1550985616-10810253b84d?auto=format&fit=crop&w=300&q=80" alt="Smart LED Solar Bulb">
-            <div class="product-details">
-                <div>
-                    <h3 class="product-name">Smart LED Solar Bulb</h3>
-                    <p class="product-pricing">Lease Cost: <span>10,000 UGX</span></p>
-                    <p class="product-pricing">Daily Commission: <span>500 UGX / Day</span></p>
+        <!-- ================= HOME PAGE ================= -->
+        <div id="home-page" class="page active px-4 pt-4">
+            <!-- Brand Logo Header -->
+            <div class="flex flex-col items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-[#7CB342] rounded-full flex items-center justify-center text-white font-extrabold text-xl italic">a</div>
+                    <span class="text-3xl font-extrabold text-gray-800 tracking-tight">akuo</span>
                 </div>
-                <button class="rent-btn" onclick="openLeaseModal('Smart LED Solar Bulb', 10000, 500)">Lease</button>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Entrepreneurs by nature</p>
             </div>
-        </div>
 
-        <!-- Product 2: Solar FM Radio -->
-        <div class="product-card">
-            <img class="product-image" src="https://images.unsplash.com/photo-1612117565152-320d75a68731?auto=format&fit=crop&w=300&q=80" alt="Solar Charging FM Radio">
-            <div class="product-details">
-                <div>
-                    <h3 class="product-name">Solar Charging FM Radio</h3>
-                    <p class="product-pricing">Lease Cost: <span>50,000 UGX</span></p>
-                    <p class="product-pricing">Daily Commission: <span>3,000 UGX / Day</span></p>
+            <!-- Main Quick Menu Buttons -->
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <button onclick="switchTab('product')" class="bg-[#81C784]/20 hover:bg-[#81C784]/30 p-3 rounded-xl flex flex-col items-center justify-center transition">
+                    <div class="bg-[#7CB342] text-white p-2 rounded-lg mb-1 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-cube"></i></div>
+                    <span class="text-[10px] font-semibold text-gray-700">My Product</span>
+                </button>
+                <button onclick="switchTab('my')" class="bg-[#81C784]/20 hover:bg-[#81C784]/30 p-3 rounded-xl flex flex-col items-center justify-center transition">
+                    <div class="bg-[#7CB342] text-white p-2 rounded-lg mb-1 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-users"></i></div>
+                    <span class="text-[10px] font-semibold text-gray-700">My Team</span>
+                </button>
+                <button onclick="switchTab('my')" class="bg-[#81C784]/20 hover:bg-[#81C784]/30 p-3 rounded-xl flex flex-col items-center justify-center transition">
+                    <div class="bg-[#7CB342] text-white p-2 rounded-lg mb-1 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-envelope"></i></div>
+                    <span class="text-[10px] font-semibold text-gray-700">Invite Friends</span>
+                </button>
+                <button onclick="switchTab('wallet')" class="bg-[#81C784]/20 hover:bg-[#81C784]/30 p-3 rounded-xl flex flex-col items-center justify-center transition">
+                    <div class="bg-[#7CB342] text-white p-2 rounded-lg mb-1 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-wallet"></i></div>
+                    <span class="text-[10px] font-semibold text-gray-700">Exchange</span>
+                </button>
+            </div>
+
+            <!-- Banner Section -->
+            <div class="relative rounded-2xl overflow-hidden mb-5 h-44 shadow-lg bg-gradient-to-r from-emerald-800 to-teal-700 text-white p-5 flex flex-col justify-end">
+                <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&q=80&w=600');"></div>
+                <div class="relative z-10">
+                    <span class="bg-[#7CB342] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Project Gatinais I & II</span>
+                    <h2 class="text-xl font-bold mt-1">Solar & Wind Farming</h2>
+                    <p class="text-[11px] text-gray-200">Invest today for a cleaner and wealthier future.</p>
                 </div>
-                <button class="rent-btn" onclick="openLeaseModal('Solar Charging FM Radio', 50000, 3000)">Lease</button>
             </div>
-        </div>
 
-        <!-- Product 3: Mobile WiFi Router -->
-        <div class="product-card">
-            <img class="product-image" src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=300&q=80" alt="4G LTE Mobile Wi-Fi Router">
-            <div class="product-details">
-                <div>
-                    <h3 class="product-name">4G LTE Mobile Wi-Fi Router</h3>
-                    <p class="product-pricing">Lease Cost: <span>150,000 UGX</span></p>
-                    <p class="product-pricing">Daily Commission: <span>10,000 UGX / Day</span></p>
+            <!-- Recharge and Withdraw Core Buttons -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="switchTab('wallet')" class="bg-[#7CB342] hover:bg-[#689F38] text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wallet"></i> Recharge
+                </button>
+                <button onclick="switchTab('wallet')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Withdraw
+                </button>
+            </div>
+
+            <!-- Hot Products Label -->
+            <div class="flex items-center space-x-2 mb-3">
+                <div class="w-1.5 h-4 bg-[#7CB342] rounded-full"></div>
+                <h3 class="font-bold text-gray-800 text-sm tracking-wide">HOT PRODUCTS</h3>
+            </div>
+
+            <!-- Hot Product Item -->
+            <div class="bg-[#E8F5E9] rounded-2xl p-4 mb-4 border border-[#C8E6C9] flex gap-3 shadow-sm">
+                <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=200" class="w-20 h-20 rounded-xl object-cover bg-white" alt="Solar Panel">
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="bg-[#7CB342] text-white font-bold text-xs px-2 py-0.5 rounded-full">A-1D</span>
+                        <span class="text-xs font-bold text-[#7CB342]">190.0% Return</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1 text-[11px] text-gray-600">
+                        <div>Price: <span class="font-bold text-gray-800">30,000.00 UGX</span></div>
+                        <div>Day Income: <span class="font-bold text-emerald-600">1,140.00 UGX</span></div>
+                        <div>Cycles: <span class="font-bold text-gray-800">50 Days</span></div>
+                        <div>Total Income: <span class="font-bold text-gray-800">57,000.00 UGX</span></div>
+                    </div>
                 </div>
-                <button class="rent-btn" onclick="openLeaseModal('4G LTE Mobile Wi-Fi Router', 150000, 10000)">Lease</button>
             </div>
         </div>
 
-        <!-- Product 4: Core i5 Laptop -->
-        <div class="product-card">
-            <img class="product-image" src="https://images.unsplash.com/photo-1496181130204-755241524eab?auto=format&fit=crop&w=300&q=80" alt="Business Laptop Core i5">
-            <div class="product-details">
-                <div>
-                    <h3 class="product-name">Business Laptop (Core i5)</h3>
-                    <p class="product-pricing">Lease Cost: <span>500,000 UGX</span></p>
-                    <p class="product-pricing">Daily Commission: <span>38,000 UGX / Day</span></p>
-                </div>
-                <button class="rent-btn" onclick="openLeaseModal('Business Laptop (Core i5)', 500000, 38000)">Lease</button>
-            </div>
-        </div>
-
-    </section>
-
-    <!-- Interactive Navigation System -->
-    <nav class="bottom-nav">
-        <a href="index.html" class="nav-item active">
-            <div class="nav-icon">🏠</div>
-            <div>Home</div>
-        </a>
-        <a href="order.html" class="nav-item">
-            <div class="nav-icon">📈</div>
-            <div>Order</div>
-        </a>
-        <a href="team.html" class="nav-item">
-            <div class="nav-icon">👥</div>
-            <div>Team</div>
-        </a>
-        <a href="me.html" class="nav-item">
-            <div class="nav-icon">👤</div>
-            <div>Me</div>
-        </a>
-    </nav>
-
-    <!-- Confirmation Modal Dialog -->
-    <div class="modal" id="lease-modal">
-        <div class="modal-content">
-            <div class="modal-title" id="modal-title">Confirm Lease</div>
-            <div class="modal-text" id="modal-desc">Are you sure you want to lease this equipment?</div>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" onclick="closeLeaseModal()">Cancel</button>
-                <button class="modal-btn confirm" id="modal-confirm-btn">Confirm Lease</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- API Connection Pipeline Script -->
-    <script>
-        let currentTargetProduct = null;
-
-        // Fetch User Profile on Page Load
-        async function loadUserProfile() {
-            try {
-                const response = await fetch('/api/user/profile');
-                const data = await response.json();
-                
-                if (data.phone) {
-                    document.getElementById('display-phone').innerText = data.phone;
-                    document.getElementById('user-balance').innerText = 'UGX ' + data.balance.toLocaleString();
-                    document.getElementById('user-commission').innerText = 'UGX ' + data.commission.toLocaleString();
-                } else {
-                    // Redirect back to login if unauthorized
-                    window.location.href = 'login.html';
-                }
-            } catch (err) {
-                console.error("Profile sync failure:", err);
-            }
-        }
-
-        // Open Confirmation Box
-        function openLeaseModal(name, price, daily) {
-            currentTargetProduct = { name, price, daily };
-            document.getElementById('modal-title').innerText = "Confirm " + name;
-            document.getElementById('modal-desc').innerText = `Lease Price: ${price.toLocaleString()} UGX\nExpected Daily Profit: ${daily.toLocaleString()} UGX / Day\n\nDo you want to authorize this investment?`;
-            document.getElementById('lease-modal').style.display = 'flex';
-        }
-
-        function closeLeaseModal() {
-            document.getElementById('lease-modal').style.display = 'none';
-        }
-
-        // Send Purchase API Request to Backend
-        document.getElementById('modal-confirm-btn').addEventListener('click', async () => {
-            if (!currentTargetProduct) return;
+        <!-- ================= PRODUCT PAGE ================= -->
+        <div id="product-page" class="page px-4 pt-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Solar Energy Products</h2>
             
-            try {
-                const response = await fetch('/api/user/buy-product', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        productName: currentTargetProduct.name,
-                        price: currentTargetProduct.price,
-                        dailyIncome: currentTargetProduct.daily
-                    })
-                });
-                
-                const data = await response.json();
-                alert(data.message);
-                closeLeaseModal();
-                loadUserProfile(); // Update balances dynamically
-            } catch (err) {
-                alert("Network error processing lease order. Please try again.");
-            }
-        });
+            <!-- Dynamic Product List Container -->
+            <div id="dynamic-product-list" class="space-y-4 mb-6">
+                <!-- Product A-2D -->
+                <div class="bg-[#E8F5E9] rounded-2xl p-4 border border-[#C8E6C9] shadow-sm">
+                    <div class="flex gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=200" class="w-20 h-20 rounded-xl object-cover bg-white" alt="Solar">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="bg-[#7CB342] text-white font-bold text-xs px-3 py-0.5 rounded-full">A-2D</span>
+                                <span class="text-xs font-bold text-[#7CB342]">204.0%</span>
+                            </div>
+                            <div class="text-sm text-gray-700">Price: <span class="font-extrabold">90,000.00 UGX</span></div>
+                            <div class="text-xs text-gray-500">Cycles: <span class="font-medium">51 Days</span></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white p-2 rounded-xl text-center"><p class="text-[10px] text-gray-400 font-bold">DAY INCOME</p><p class="text-emerald-600 font-bold">3,600.00 UGX</p></div>
+                        <div class="bg-white p-2 rounded-xl text-center"><p class="text-[10px] text-gray-400 font-bold">TOTAL INCOME</p><p class="text-gray-800 font-bold">183,600.00 UGX</p></div>
+                    </div>
+                </div>
 
-        function triggerWithdraw() {
-            alert("Withdraw request processing. Please head to your 'Me' page to submit withdrawal credentials.");
-        }
+                <!-- Product A-3D -->
+                <div class="bg-[#E8F5E9] rounded-2xl p-4 border border-[#C8E6C9] shadow-sm">
+                    <div class="flex gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=200" class="w-20 h-20 rounded-xl object-cover bg-white" alt="Solar">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="bg-[#7CB342] text-white font-bold text-xs px-3 py-0.5 rounded-full">A-3D</span>
+                                <span class="text-xs font-bold text-[#7CB342]">218.4%</span>
+                            </div>
+                            <div class="text-sm text-gray-700">Price: <span class="font-extrabold">270,000.00 UGX</span></div>
+                            <div class="text-xs text-gray-500">Cycles: <span class="font-medium">52 Days</span></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white p-2 rounded-xl text-center"><p class="text-[10px] text-gray-400 font-bold">DAY INCOME</p><p class="text-emerald-600 font-bold">11,340.00 UGX</p></div>
+                        <div class="bg-white p-2 rounded-xl text-center"><p class="text-[10px] text-gray-400 font-bold">TOTAL INCOME</p><p class="text-gray-800 font-bold">589,680.00 UGX</p></div>
+                    </div>
+                </div>
+            </div>
 
-        function triggerClaim() {
-            alert("Transferring commission balances back to main wallet ledger...");
-        }
+            <!-- ================= DYNAMIC UPLOAD FORM (ADMIN / PRODUCT INSERTER) ================= -->
+            <div class="bg-white rounded-2xl p-5 border-2 border-dashed border-[#7CB342]/40 bg-slate-50 mb-6 shadow-inner">
+                <h3 class="text-sm font-bold text-gray-800 mb-3 text-center flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-[#7CB342]"></i> Upload New Solar Product
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Upload Product Image</label>
+                        <input type="file" id="prodImage" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="prodName" placeholder="Name (e.g. A-4D)" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-[#7CB342] focus:outline-none">
+                        <input type="number" id="prodPrice" placeholder="Price (UGX)" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-[#7CB342] focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="prodDayIncome" placeholder="Daily Income (UGX)" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-[#7CB342] focus:outline-none">
+                        <input type="number" id="prodCycles" placeholder="Cycles (Days)" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-[#7CB342] focus:outline-none">
+                    </div>
+                    <button onclick="addNewProduct()" class="w-full bg-[#7CB342] text-white font-bold text-xs py-2 rounded-lg hover:bg-[#689F38] transition shadow-md">
+                        Add to Product Catalog
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        // Trigger on startup
-        window.onload = loadUserProfile;
-    </script>
-</body>
-</html>
+        <!-- ================= MESSAGE PAGE ================= -->
+        <div id="message-page" class="page px-4 pt-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Customer Service</h2>
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-blue-800 text-xs leading-relaxed space-y-3 mb-4 shadow-sm">
+                <div class="flex items-center gap-2 font-bold mb-2">
+                    <span class="w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping"></span>
+                    <span>Official Event Announcement</span>
+                </div>
+                <p>🎁 Invite a new user to activate <span class="font-bold">A-1D</span> and instantly receive <span class="font-bold">5,000 UGX</span> referral reward!</p>
+                <p>🎁 Invite to activate <span class="font-bold">A-2D</span> and receive <span class="font-bold">10,000 UGX</span> referral reward + 2 draw tickets.</p>
+                <p class="font-medium">Please invite new members in advance to maximize your lucky draw chances.</p>
+            </div>
+            
+            <!-- Chat Simulator UI -->
+            <div class="bg-gray-50 rounded-2xl p-3 border border-gray-200 min-h-[160px] flex flex-col justify-between shadow-inner">
+                <div class="text-[11px] text-gray-400 text-center my-2">Today 00:40:32</div>
+                <div class="flex gap-2 items-start">
+                    <div class="w-7 h-7 rounded-full bg-[#7CB342] flex items-center justify-center text-white text-xs font-bold">A</div>
+                    <div class="bg-white p-3 rounded-2xl text-xs text-gray-700 border border-gray-200 max-w-[80%]">
+                        How can we help you today? Feel free to ask about your investments, deposits or pending withdrawals.
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-2">
+                    <input type="text" placeholder="Write a message..." class="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#7CB342]">
+                    <button class="bg-[#7CB342] text-white px-3 rounded-lg"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= WALLET PAGE ================= -->
+        <div id="wallet-page" class="page px-4 pt-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Wallet Management</h2>
+            
+            <!-- Balances Panel -->
+            <div class="bg-[#E8F5E9] rounded-2xl p-5 border border-[#C8E6C9] shadow-sm mb-4 text-center">
+                <p class="text-xs text-gray-500 font-semibold tracking-wider">INCOME WALLET</p>
+                <h1 id="userBalance" class="text-3xl font-extrabold text-gray-800 my-2">0.00 <span class="text-sm">UGX</span></h1>
+                <div class="inline-block bg-white text-xs px-4 py-1.5 rounded-full font-bold text-gray-600 shadow-sm border border-gray-100">
+                    Recharge Balance: <span class="text-[#7CB342]">0.00 UGX</span>
+                </div>
+            </div>
+
+            <!-- Transaction Actions -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button class="bg-white border border-gray-200 p-3 rounded-xl shadow-sm text-center font-bold text-xs text-gray-700 hover:bg-slate-50 transition">
+                    <i class="fa-solid fa-history text-emerald-600 mb-1 block text-lg"></i> Withdrawal History
+                </button>
+                <button class="bg-white border border-gray-200 p-3 rounded-xl shadow-sm text-center font-bold text-xs text-gray-700 hover:bg-slate-50 transition">
+                    <i class="fa-solid fa-receipt text-orange-600 mb-1 block text-lg"></i> Fund History
+                </button>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-[#E8F5E9]/50 p-3 rounded-xl border border-[#C8E6C9] text-center">
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">Today's Income</p>
+                    <p class="text-sm font-bold text-gray-800">0.00 UGX</p>
+                </div>
+                <div class="bg-[#E8F5E9]/50 p-3 rounded-xl border border-[#C8E6C9] text-center">
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">Total Income</p>
+                    <p class="text-sm font-bold text-gray-800">0.00 UGX</p>
+                </div>
+                <div class="bg-[#E8F5E9]/50 p-3 rounded-xl border border-[#C8E6C9] text-center">
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">Total Recharge</p>
+                    <p class="text-sm font-bold text-gray-800">0.00 UGX</p>
+                </div>
+                <div class="bg-[#E8F5E9]/50 p-3 rounded-xl border border-[#C8E6C9] text-center">
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">Total Withdrawal</p>
+                    <p class="text-sm font-bold text-gray-800">0.00 UGX</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PROFILE ("MY") PAGE ================= -->
+        <div id="my-page" class="page px-4 pt-4">
+            <!-- User Head Banner -->
+            <div class="flex items-center gap-4 bg-[#E8F5E9]/50 p-4 rounded-2xl border border-[#C8E6C9] mb-4">
+                <div class="w-14 h-14 bg-[#7CB342] rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-gray-800">700371818</h3>
+                    <div class="flex gap-2 mt-1">
+                        <span class="bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <i class="fa-solid fa-gem"></i> VIP0
+                        </span>
+                        <span class="text-[10px] text-gray-500 font-medium self-center">Next: VIP1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informational Banner -->
+            <div class="bg-emerald-500 text-white text-xs p-3 rounded-xl mb-5 flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Rent any product to unlock and become <strong>VIP1</strong></span>
+            </div>
+
+            <!-- Option Lists -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4 divide
