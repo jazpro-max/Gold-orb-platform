@@ -1,7 +1,4 @@
-# Let's generate a highly polished, responsive, and beautifully designed index.html
-# with the name "JAZTECH SHOPPING" using the collected image URLs and sleek technology themes.
-
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -172,8 +169,7 @@ html_content = """<!DOCTYPE html>
 
         .product-image {
             width: 120px;
-            height: auto;
-            min-height: 120px;
+            height: 120px;
             object-fit: cover;
             border-right: 1px solid #1f2937;
         }
@@ -356,7 +352,7 @@ html_content = """<!DOCTYPE html>
 
         <!-- Product 1: Smart LED Solar Bulb -->
         <div class="product-card">
-            <img class="product-image" src="http://googleusercontent.com/image_collection/image_retrieval/14509007467007878183_0" alt="Smart LED Solar Bulb">
+            <img class="product-image" src="https://images.unsplash.com/photo-1550985616-10810253b84d?auto=format&fit=crop&w=300&q=80" alt="Smart LED Solar Bulb">
             <div class="product-details">
                 <div>
                     <h3 class="product-name">Smart LED Solar Bulb</h3>
@@ -369,7 +365,7 @@ html_content = """<!DOCTYPE html>
 
         <!-- Product 2: Solar FM Radio -->
         <div class="product-card">
-            <img class="product-image" src="http://googleusercontent.com/image_collection/image_retrieval/9538342238167266409_0" alt="Solar Charging FM Radio">
+            <img class="product-image" src="https://images.unsplash.com/photo-1612117565152-320d75a68731?auto=format&fit=crop&w=300&q=80" alt="Solar Charging FM Radio">
             <div class="product-details">
                 <div>
                     <h3 class="product-name">Solar Charging FM Radio</h3>
@@ -382,7 +378,7 @@ html_content = """<!DOCTYPE html>
 
         <!-- Product 3: Mobile WiFi Router -->
         <div class="product-card">
-            <img class="product-image" src="http://googleusercontent.com/image_collection/image_retrieval/4943786174157054050_0" alt="4G LTE Mobile Wi-Fi Router">
+            <img class="product-image" src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=300&q=80" alt="4G LTE Mobile Wi-Fi Router">
             <div class="product-details">
                 <div>
                     <h3 class="product-name">4G LTE Mobile Wi-Fi Router</h3>
@@ -395,7 +391,7 @@ html_content = """<!DOCTYPE html>
 
         <!-- Product 4: Core i5 Laptop -->
         <div class="product-card">
-            <img class="product-image" src="http://googleusercontent.com/image_collection/image_retrieval/7525767244425551439_0" alt="Business Laptop Core i5">
+            <img class="product-image" src="https://images.unsplash.com/photo-1496181130204-755241524eab?auto=format&fit=crop&w=300&q=80" alt="Business Laptop Core i5">
             <div class="product-details">
                 <div>
                     <h3 class="product-name">Business Laptop (Core i5)</h3>
@@ -467,7 +463,7 @@ html_content = """<!DOCTYPE html>
         function openLeaseModal(name, price, daily) {
             currentTargetProduct = { name, price, daily };
             document.getElementById('modal-title').innerText = "Confirm " + name;
-            document.getElementById('modal-desc').innerText = `Lease Price: ${price.toLocaleString()} UGX\\nExpected Daily Profit: ${daily.toLocaleString()} UGX / Day\\n\\nDo you want to authorize this investment?`;
+            document.getElementById('modal-desc').innerText = `Lease Price: ${price.toLocaleString()} UGX\nExpected Daily Profit: ${daily.toLocaleString()} UGX / Day\n\nDo you want to authorize this investment?`;
             document.getElementById('lease-modal').style.display = 'flex';
         }
 
@@ -512,10 +508,3 @@ html_content = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-# Write index.html file
-with open("/mnt/data/index.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print("index.html created successfully with beautiful styling, asset images, and Jaztech Shopping branding.")
