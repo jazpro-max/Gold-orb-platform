@@ -1,92 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaztech Shopping - Main Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
-        ::-webkit-scrollbar { display: none; }
-        .content-frame { width: 100%; border: none; height: calc(100vh - 112px); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipment Investment Platform</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --secondary-color: #0b5ed7;
+      --bg-dark: #121212;
+      --card-bg: #1e1e1e;
+      --text-light: #f8f9fa;
+      --text-muted: #a0a0a0;
+      --accent-green: #25d366;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      padding-bottom: 70px; /* Space for bottom nav on mobile */
+    }
+
+    /* Top Navigation Header */
+    header {
+      background-color: var(--card-bg);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .desktop-nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    .desktop-nav a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.3s;
+    }
+
+    .desktop-nav a:hover, .desktop-nav a.active {
+      color: var(--primary-color);
+    }
+
+    /* Editable Dynamic Marquee Bar */
+    .ticker-wrap {
+      width: 100%;
+      background: rgba(13, 110, 253, 0.15);
+      border-bottom: 1px solid rgba(13, 110, 253, 0.3);
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .ticker-title {
+      background: var(--primary-color);
+      color: white;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border-radius: 4px;
+      margin-left: 10px;
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    marquee {
+      color: #ffca28;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .section-title {
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      border-left: 4px solid var(--primary-color);
+      padding-left: 10px;
+    }
+
+    /* Investment Machine Grid */
+    .machine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .machine-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #2a2a2a;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .machine-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(13, 110, 253, 0.2);
+    }
+
+    .machine-img {
+      width: 100%;
+      height: 180px;
+      background-color: #2b2b2b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: var(--primary-color);
+    }
+
+    .machine-details {
+      padding: 15px;
+    }
+
+    .machine-title {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .stats-table {
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 0.85rem;
+    }
+
+    .stats-table td {
+      padding: 4px 0;
+    }
+
+    .stats-table td:last-child {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .text-green {
+      color: var(--accent-green);
+    }
+
+    .buy-btn {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .buy-btn:hover {
+      background-color: var(--secondary-color);
+    }
+
+    /* Mobile Bottom Navigation Bar */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--card-bg);
+      border-top: 1px solid #2a2a2a;
+      justify-content: space-around;
+      padding: 10px 0;
+      z-index: 1000;
+    }
+
+    .mobile-nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      gap: 4px;
+    }
+
+    .mobile-nav a.active, .mobile-nav a:hover {
+      color: var(--primary-color);
+    }
+
+    .mobile-nav i {
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-nav {
+        display: none;
+      }
+      .mobile-nav {
+        display: flex;
+      }
+    }
+  </style>
 </head>
-<body class="flex justify-center items-center min-h-screen bg-gray-100">
+<body>
 
-    <!-- Mobile Wrapper Shell -->
-    <div class="w-full max-w-md bg-white min-h-screen shadow-2xl flex flex-col relative pb-16 overflow-hidden">
-        
-        <!-- TOP MARQUEE HEADER (Single persistent instance) -->
-        <div class="bg-emerald-50 text-emerald-800 text-xs py-2 px-3 border-b border-emerald-100 flex items-center shrink-0">
-            <span class="font-bold mr-2 flex items-center shrink-0"><i class="fa-solid fa-bullhorn mr-1 text-emerald-600 animate-pulse"></i> News:</span>
-            <marquee behavior="scroll" direction="left" class="w-full" scrollamount="4">
-                Welcome to Jaztech Shopping! Explore catalog packages and track active investment yields.
-            </marquee>
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-microchip"></i>
+      <span>ElectroEarn</span>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav">
+      <a href="index.html" class="active"><i class="fa-solid fa-house"></i> Home</a>
+      <a href="orders.html"><i class="fa-solid fa-box-archive"></i> Orders</a>
+      <a href="team.html"><i class="fa-solid fa-users"></i> Team</a>
+      <a href="me.html"><i class="fa-solid fa-user"></i> Me</a>
+    </nav>
+  </header>
+
+  <!-- Notification Marquee Section -->
+  <div class="ticker-wrap">
+    <span class="ticker-title"><i class="fa-solid fa-bullhorn"></i> NOTICE</span>
+    <marquee id="adminNotice" behavior="scroll" direction="left" scrollamount="6">
+      Welcome to ElectroEarn! Invest in machinery today and start receiving daily automated earnings.
+    </marquee>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="container">
+    <h2 class="section-title">Equipment Investments</h2>
+    
+    <div class="machine-grid">
+
+      <!-- Machine Card 1 -->
+      <div class="machine-card">
+        <div class="machine-img">
+          <i class="fa-solid fa-server"></i>
         </div>
+        <div class="machine-details">
+          <h3 class="machine-title">Mini Server Node v1</h3>
+          <table class="stats-table">
+            <tr>
+              <td>Price:</td>
+              <td>$50.00</td>
+            </tr>
+            <tr>
+              <td>Daily Income:</td>
+              <td class="text-green">+$2.50</td>
+            </tr>
+            <tr>
+              <td>Revenue Cycle:</td>
+              <td>30 Days</td>
+            </tr>
+            <tr>
+              <td>Total Revenue:</td>
+              <td class="text-green">$75.00</td>
+            </tr>
+          </table>
+          <button class="buy-btn" onclick="buyMachine('Mini Server Node v1', 50)">Invest Now</button>
+        </div>
+      </div>
 
-        <!-- DYNAMIC IFRAME VIEWPORT -->
-        <main class="flex-1 overflow-y-auto" id="main-content">
-            <!-- Default load set to order.html or your main content view -->
-            <iframe id="view-frame" src="order.html" class="content-frame"></iframe>
-        </main>
+      <!-- Machine Card 2 -->
+      <div class="machine-card">
+        <div class="machine-img">
+          <i class="fa-solid fa-hard-drive"></i>
+        </div>
+        <div class="machine-details">
+          <h3 class="machine-title">High-Power ASIC Miner</h3>
+          <table class="stats-table">
+            <tr>
+              <td>Price:</td>
+              <td>$200.00</td>
+            </tr>
+            <tr>
+              <td>Daily Income:</td>
+              <td class="text-green">+$11.00</td>
+            </tr>
+            <tr>
+              <td>Revenue Cycle:</td>
+              <td>45 Days</td>
+            </tr>
+            <tr>
+              <td>Total Revenue:</td>
+              <td class="text-green">$495.00</td>
+            </tr>
+          </table>
+          <button class="buy-btn" onclick="buyMachine('High-Power ASIC Miner', 200)">Invest Now</button>
+        </div>
+      </div>
 
-        <!-- BOTTOM PERSISTENT NAVIGATION BAR -->
-        <nav class="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 flex justify-around items-center z-50">
-            <!-- Home points to content (order.html), NEVER index.html -->
-            <button onclick="navigate('order.html', 'tab-home')" id="tab-home" class="nav-btn flex flex-col items-center justify-center text-emerald-600">
-                <i class="fa-solid fa-house text-base"></i>
-                <span class="text-[9px] mt-0.5 font-bold">Home</span>
-            </button>
-            <button onclick="navigate('team.html', 'tab-team')" id="tab-team" class="nav-btn flex flex-col items-center justify-center text-gray-400">
-                <i class="fa-solid fa-users text-base"></i>
-                <span class="text-[9px] mt-0.5">Team</span>
-            </button>
-            <button onclick="navigate('transactions.html', 'tab-tx')" id="tab-tx" class="nav-btn flex flex-col items-center justify-center text-gray-400">
-                <i class="fa-solid fa-arrow-right-arrow-left text-base"></i>
-                <span class="text-[9px] mt-0.5">Ledger</span>
-            </button>
-            <button onclick="navigate('notifications.html', 'tab-notif')" id="tab-notif" class="nav-btn flex flex-col items-center justify-center text-gray-400">
-                <i class="fa-solid fa-bell text-base"></i>
-                <span class="text-[9px] mt-0.5">Alerts</span>
-            </button>
-            <button onclick="navigate('me.html', 'tab-me')" id="tab-me" class="nav-btn flex flex-col items-center justify-center text-gray-400">
-                <i class="fa-solid fa-user text-base"></i>
-                <span class="text-[9px] mt-0.5">Profile</span>
-            </button>
-        </nav>
+      <!-- Machine Card 3 -->
+      <div class="machine-card">
+        <div class="machine-img">
+          <i class="fa-solid fa-network-wired"></i>
+        </div>
+        <div class="machine-details">
+          <h3 class="machine-title">Enterprise Edge Rig</h3>
+          <table class="stats-table">
+            <tr>
+              <td>Price:</td>
+              <td>$500.00</td>
+            </tr>
+            <tr>
+              <td>Daily Income:</td>
+              <td class="text-green">+$30.00</td>
+            </tr>
+            <tr>
+              <td>Revenue Cycle:</td>
+              <td>60 Days</td>
+            </tr>
+            <tr>
+              <td>Total Revenue:</td>
+              <td class="text-green">$1,800.00</td>
+            </tr>
+          </table>
+          <button class="buy-btn" onclick="buyMachine('Enterprise Edge Rig', 500)">Invest Now</button>
+        </div>
+      </div>
 
     </div>
+  </main>
 
-    <script>
-        function navigate(pageUrl, activeTabId) {
-            // Safety check: Prevent loading index.html inside its own iframe
-            if (pageUrl === 'index.html' || pageUrl === '/') {
-                pageUrl = 'order.html';
-            }
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="mobile-nav">
+    <a href="index.html" class="active">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="orders.html">
+      <i class="fa-solid fa-box-archive"></i>
+      <span>Orders</span>
+    </a>
+    <a href="team.html">
+      <i class="fa-solid fa-users"></i>
+      <span>Team</span>
+    </a>
+    <a href="me.html">
+      <i class="fa-solid fa-user"></i>
+      <span>Me</span>
+    </a>
+  </nav>
 
-            document.getElementById('view-frame').src = pageUrl;
+  <script>
+    // Load dynamically configured announcement from Admin Portal (using localStorage)
+    document.addEventListener('DOMContentLoaded', () => {
+      const storedNotice = localStorage.getItem('adminMarqueeText');
+      if (storedNotice) {
+        document.getElementById('adminNotice').innerText = storedNotice;
+      }
+    });
 
-            // Highlight Active Nav Item
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-emerald-600');
-                btn.classList.add('text-gray-400');
-                btn.querySelector('span')?.classList.remove('font-bold');
-            });
-
-            const activeBtn = document.getElementById(activeTabId);
-            if (activeBtn) {
-                activeBtn.classList.add('text-emerald-600');
-                activeBtn.classList.remove('text-gray-400');
-                activeBtn.querySelector('span')?.classList.add('font-bold');
-            }
-        }
-
-        // Helper function for login/register redirect (Call this from inside any page)
-        function redirectToAuth(authPage) {
-            window.top.location.href = authPage;
-        }
-    </script>
+    // Simple Purchase Handler Template
+    function buyMachine(name, price) {
+      if (confirm(`Confirm investment of $${price} in ${name}?`)) {
+        alert(`Successfully ordered ${name}! Check details in your Orders page.`);
+        // Redirect to orders page or make POST API request here
+        // window.location.href = 'orders.html';
+      }
+    }
+  </script>
 </body>
 </html>
