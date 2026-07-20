@@ -3,53 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaztech Shopping - Mobile Dashboard</title>
+    <title>Jaztech Shopping - Main Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
         ::-webkit-scrollbar { display: none; }
-        .content-frame { width: 100%; border: none; height: calc(100vh - 120px); }
+        .content-frame { width: 100%; border: none; height: calc(100vh - 112px); }
     </style>
 </head>
 <body class="flex justify-center items-center min-h-screen bg-gray-100">
 
-    <!-- Mobile Wrapper -->
+    <!-- Mobile Wrapper Shell -->
     <div class="w-full max-w-md bg-white min-h-screen shadow-2xl flex flex-col relative pb-16 overflow-hidden">
         
-        <!-- TOP MARQUEE HEADER -->
+        <!-- TOP MARQUEE HEADER (Single persistent instance) -->
         <div class="bg-emerald-50 text-emerald-800 text-xs py-2 px-3 border-b border-emerald-100 flex items-center shrink-0">
             <span class="font-bold mr-2 flex items-center shrink-0"><i class="fa-solid fa-bullhorn mr-1 text-emerald-600 animate-pulse"></i> News:</span>
             <marquee behavior="scroll" direction="left" class="w-full" scrollamount="4">
-                Welcome to Jaztech Shopping! Check out new catalog packages and earning multipliers in your team network.
+                Welcome to Jaztech Shopping! Explore catalog packages and track active investment yields.
             </marquee>
         </div>
 
-        <!-- DYNAMIC PAGE CONTAINER (Loads HTML Pages seamlessly) -->
+        <!-- DYNAMIC IFRAME VIEWPORT -->
         <main class="flex-1 overflow-y-auto" id="main-content">
-            <iframe id="view-frame" src="/order" class="content-frame"></iframe>
+            <!-- Default load set to order.html or your main content view -->
+            <iframe id="view-frame" src="order.html" class="content-frame"></iframe>
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR -->
+        <!-- BOTTOM PERSISTENT NAVIGATION BAR -->
         <nav class="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 flex justify-around items-center z-50">
-            <button onclick="navigate('/order', 'tab-order')" id="tab-order" class="nav-btn flex flex-col items-center justify-center text-emerald-600">
-                <i class="fa-solid fa-bag-shopping text-base"></i>
-                <span class="text-[9px] mt-0.5 font-bold">Orders</span>
+            <!-- Home points to content (order.html), NEVER index.html -->
+            <button onclick="navigate('order.html', 'tab-home')" id="tab-home" class="nav-btn flex flex-col items-center justify-center text-emerald-600">
+                <i class="fa-solid fa-house text-base"></i>
+                <span class="text-[9px] mt-0.5 font-bold">Home</span>
             </button>
-            <button onclick="navigate('/team', 'tab-team')" id="tab-team" class="nav-btn flex flex-col items-center justify-center text-gray-400">
+            <button onclick="navigate('team.html', 'tab-team')" id="tab-team" class="nav-btn flex flex-col items-center justify-center text-gray-400">
                 <i class="fa-solid fa-users text-base"></i>
                 <span class="text-[9px] mt-0.5">Team</span>
             </button>
-            <button onclick="navigate('/transactions', 'tab-tx')" id="tab-tx" class="nav-btn flex flex-col items-center justify-center text-gray-400">
+            <button onclick="navigate('transactions.html', 'tab-tx')" id="tab-tx" class="nav-btn flex flex-col items-center justify-center text-gray-400">
                 <i class="fa-solid fa-arrow-right-arrow-left text-base"></i>
                 <span class="text-[9px] mt-0.5">Ledger</span>
             </button>
-            <button onclick="navigate('/notifications', 'tab-notif')" id="tab-notif" class="nav-btn flex flex-col items-center justify-center text-gray-400">
+            <button onclick="navigate('notifications.html', 'tab-notif')" id="tab-notif" class="nav-btn flex flex-col items-center justify-center text-gray-400">
                 <i class="fa-solid fa-bell text-base"></i>
                 <span class="text-[9px] mt-0.5">Alerts</span>
             </button>
-            <button onclick="navigate('/me', 'tab-me')" id="tab-me" class="nav-btn flex flex-col items-center justify-center text-gray-400">
+            <button onclick="navigate('me.html', 'tab-me')" id="tab-me" class="nav-btn flex flex-col items-center justify-center text-gray-400">
                 <i class="fa-solid fa-user text-base"></i>
                 <span class="text-[9px] mt-0.5">Profile</span>
             </button>
@@ -59,9 +61,14 @@
 
     <script>
         function navigate(pageUrl, activeTabId) {
+            // Safety check: Prevent loading index.html inside its own iframe
+            if (pageUrl === 'index.html' || pageUrl === '/') {
+                pageUrl = 'order.html';
+            }
+
             document.getElementById('view-frame').src = pageUrl;
 
-            // Highlight Active Nav Button
+            // Highlight Active Nav Item
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-emerald-600');
                 btn.classList.add('text-gray-400');
@@ -74,6 +81,11 @@
                 activeBtn.classList.remove('text-gray-400');
                 activeBtn.querySelector('span')?.classList.add('font-bold');
             }
+        }
+
+        // Helper function for login/register redirect (Call this from inside any page)
+        function redirectToAuth(authPage) {
+            window.top.location.href = authPage;
         }
     </script>
 </body>
