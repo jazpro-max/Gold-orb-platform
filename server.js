@@ -1293,6 +1293,10 @@ app.use((err, req, res, next) => {
 // ===============================
 
 const PORT = process.env.PORT || 3000;
+// Homepage
+app.get("/", (req, res) => {
+    res.redirect("/login.html");
+});
 
 app.listen(PORT, () => {
 
