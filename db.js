@@ -1,18 +1,29 @@
 const { Pool } = require('pg');
 
-// Connects to PostgreSQL using DATABASE_URL environment variable
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-pool.on('connect', () => {
-  console.log('Connected to the PostgreSQL database');
-});
+// Automatically create the users table if it doesn't exist
+const initDb = async () => {
+  const queryText = `
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(queryText);
+    console.log('Users table is ready.');
+  } catch (err) {
+    console.error('Error creating users table:', err);
+  }
+};
 
-pool.on('error', (err) => {
-  console.error('Unexpected database error:', err);
-});
+initDb();
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
