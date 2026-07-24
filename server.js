@@ -1287,16 +1287,16 @@ app.use((err, req, res, next) => {
     });
 
 });
+// Homepage
+app.get("/", (req, res) => {
+    res.redirect("/login.html");
+});
 
 // ===============================
 // START SERVER
 // ===============================
 
 const PORT = process.env.PORT || 3000;
-// Homepage
-app.get("/", (req, res) => {
-    res.redirect("/login.html");
-});
 
 app.listen(PORT, () => {
 
