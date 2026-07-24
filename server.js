@@ -191,6 +191,10 @@ function authenticateToken(req, res, next) {
 // ===============================
 
 app.post("/api/register", async (req, res) => {
+    // Allows Express to parse JSON data sent from your frontend forms
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+    
 
     try {
 
